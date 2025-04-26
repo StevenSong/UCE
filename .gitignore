@@ -1,0 +1,8 @@
+__pycache__
+model_files/*.h5ad
+model_files/*.torch
+model_files/*.tar.gz
+model_files/*.pkl
+model_files/*.zip
+model_files/protein_embeddings
+model_files/species_chrom.csv

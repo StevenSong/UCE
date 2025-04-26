@@ -15,12 +15,12 @@ import scanpy as sc
 from tqdm.auto import tqdm
 from torch import nn, Tensor
 
-from model import TransformerModel
-from eval_data import MultiDatasetSentences, MultiDatasetSentenceCollator
-from utils import figshare_download
+from uce.model import TransformerModel
+from uce.eval_data import MultiDatasetSentences, MultiDatasetSentenceCollator
+from uce.utils import figshare_download
 
 from torch.utils.data import DataLoader
-from data_proc.data_utils import adata_path_to_prot_chrom_starts, \
+from uce.data_proc.data_utils import adata_path_to_prot_chrom_starts, \
     get_spec_chrom_csv, process_raw_anndata, get_species_to_pe
 
 import os
@@ -97,7 +97,8 @@ class AnndataProcessor:
                                     self.scp,
                                     self.args.skip,
                                     self.args.filter,
-                                    root=self.adata_root_path)
+                                    root=self.adata_root_path,
+                                    model_files_path=self.args.model_files_path)
             if (num_cells is not None) and (num_genes is not None):
                 self.save_shapes_dict(self.name, num_cells, num_genes,
                                        self.shapes_dict_path)
@@ -119,7 +120,7 @@ class AnndataProcessor:
                 print("PE Idx, Chrom and Starts files already created")
 
             else:
-                species_to_pe = get_species_to_pe(self.args.protein_embeddings_dir)
+                species_to_pe = get_species_to_pe(self.args.protein_embeddings_dir, model_files_path=self.args.model_files_path)
                 with open(self.args.offset_pkl_path, "rb") as f:
                     species_to_offsets = pickle.load(f)
 

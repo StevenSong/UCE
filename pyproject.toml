@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[project]
+name = "uce"
+requires-python = ">=3.10"
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/snap-stanford/UCE"
+
+[tool.hatch.version]
+path = "uce/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]

@@ -39,7 +39,7 @@ from torch.utils.data import dataset
 
 from accelerate import Accelerator
 import anndata
-from data_utils import adata_path_to_prot_chrom_starts, get_spec_chrom_csv
+from uce.data_proc.data_utils import adata_path_to_prot_chrom_starts, get_spec_chrom_csv
 
 
 

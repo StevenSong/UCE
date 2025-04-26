@@ -10,7 +10,7 @@ from torch import nn, Tensor
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 import sys
-sys.path.append('../')
+# sys.path.append('../')
 from typing import Any
 import torch
 

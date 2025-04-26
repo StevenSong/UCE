@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import Dict, Tuple
 
+import os
 import torch
 
 from scanpy import AnnData
@@ -9,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 
-EMBEDDING_DIR = Path('model_files/protein_embeddings')
+EMBEDDING_DIR = Path('protein_embeddings')
 MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH = {
     'ESM2': {
         'human': EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_ESM2.pt',
@@ -23,11 +24,8 @@ MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH = {
     }
 }
 
-extra_species = pd.read_csv("./model_files/new_species_protein_embeddings.csv").set_index("species").to_dict()["path"]
-MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH["ESM2"].update(extra_species) # adds new species
 
-
-def load_gene_embeddings_adata(adata: AnnData, species: list, embedding_model: str) -> Tuple[AnnData, Dict[str, torch.FloatTensor]]:
+def load_gene_embeddings_adata(adata: AnnData, species: list, embedding_model: str, model_files_path: str = "") -> Tuple[AnnData, Dict[str, torch.FloatTensor]]:
     """Loads gene embeddings for all the species/genes in the provided data.
 
     :param data: An AnnData object containing gene expression data for cells.
@@ -38,12 +36,20 @@ def load_gene_embeddings_adata(adata: AnnData, species: list, embedding_model: s
                - A subset of the data only containing the gene expression for genes with embeddings in all species.
                - A dictionary mapping species name to the corresponding gene embedding matrix (num_genes, embedding_dim).
     """
+    if model_files_path == "":
+        print("No model_files_path specified")
+    extra_species = pd.read_csv(os.path.join(model_files_path, "new_species_protein_embeddings.csv")).set_index("species").to_dict()["path"]
+    MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH["ESM2"].update(extra_species) # adds new species
     # Get species names
     species_names = species
     species_names_set = set(species_names)
 
     # Get embedding paths for the model
     species_to_gene_embedding_path = MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH[embedding_model]
+    for species, path in species_to_gene_embedding_path.items():
+        if not os.path.exists(path):
+            path = os.path.join(model_files_path, path)
+            species_to_gene_embedding_path[species] = path
     available_species = set(species_to_gene_embedding_path)
 
     # Ensure embeddings are available for all species

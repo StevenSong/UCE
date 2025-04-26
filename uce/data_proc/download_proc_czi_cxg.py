@@ -34,9 +34,9 @@ def data_to_torch_X(X):
     return torch.from_numpy(X).float()
     
 import sys
-sys.path.append('../')
+# sys.path.append('../')
 
-from gene_embeddings import load_gene_embeddings_adata
+from uce.data_proc.gene_embeddings import load_gene_embeddings_adata
 import pandas as pd
 import numpy as np
 from scanpy import AnnData

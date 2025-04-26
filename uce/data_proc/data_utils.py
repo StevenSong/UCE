@@ -30,7 +30,7 @@ from typing import Dict, List, Optional, Tuple
 from scanpy import AnnData
 
 
-from data_proc.gene_embeddings import load_gene_embeddings_adata
+from uce.data_proc.gene_embeddings import load_gene_embeddings_adata
 
 def data_to_torch_X(X):
     if isinstance(X, sc.AnnData):
@@ -117,13 +117,15 @@ def anndata_to_sc_dataset(adata:sc.AnnData,
                                  covar_col:str=None,
                                  hv_genes=None,
                                  embedding_model="ESM2",
+                                 model_files_path="",
                                 ) -> (SincleCellDataset, AnnData):
     
     # Subset to just genes we have embeddings for
     adata, protein_embeddings = load_gene_embeddings_adata(
         adata=adata,
         species=[species],
-        embedding_model=embedding_model
+        embedding_model=embedding_model,
+        model_files_path=model_files_path,
     )
     
     if hv_genes is not None:
@@ -171,11 +173,12 @@ def adata_path_to_prot_chrom_starts(adata, dataset_species, spec_pe_genes, gene_
 
 
 def process_raw_anndata(row, h5_folder_path, npz_folder_path, scp, skip,
-                        additional_filter, root):
+                        additional_filter, root, model_files_path=""):
         path = row.path
-        if not os.path.isfile(root + "/" + path):
+        root_path = os.path.join(root, path)
+        if not os.path.isfile(root_path):
             print( "**********************************")
-            print(f"***********{root + '/' + path} File Missing****")
+            print(f"***********{root_path} File Missing****")
             print( "**********************************")
             print(path, root)
             return None
@@ -192,7 +195,7 @@ def process_raw_anndata(row, h5_folder_path, npz_folder_path, scp, skip,
         species = row.species
         covar_col = row.covar_col
 
-        ad = sc.read(root + "/" + path)
+        ad = sc.read(root_path)
         labels = []
         if "cell_type" in ad.obs.columns:
             labels.append("cell_type")
@@ -208,7 +211,7 @@ def process_raw_anndata(row, h5_folder_path, npz_folder_path, scp, skip,
             sc.pp.filter_cells(ad, min_genes=25)
 
 
-        dataset, adata = anndata_to_sc_dataset(ad, species=species, labels=labels, covar_col=covar_col, hv_genes=None)
+        dataset, adata = anndata_to_sc_dataset(ad, species=species, labels=labels, covar_col=covar_col, hv_genes=None, model_files_path=model_files_path)
         adata = adata.copy()
 
         if additional_filter:
@@ -238,7 +241,7 @@ def process_raw_anndata(row, h5_folder_path, npz_folder_path, scp, skip,
         return adata, num_cells, num_genes
     
     
-def get_species_to_pe(EMBEDDING_DIR):
+def get_species_to_pe(EMBEDDING_DIR, model_files_path=""):
     """
     Given an embedding directory, return all embeddings as a dictionary coded by species.
     Note: In the current form, this function is written such that the directory needs all of the following species embeddings.
@@ -255,7 +258,7 @@ def get_species_to_pe(EMBEDDING_DIR):
             "macaca_fascicularis": EMBEDDING_DIR / 'Macaca_fascicularis.Macaca_fascicularis_6.0.gene_symbol_to_embedding_ESM2.pt',
             "macaca_mulatta": EMBEDDING_DIR / 'Macaca_mulatta.Mmul_10.gene_symbol_to_embedding_ESM2.pt',
         }
-    extra_species = pd.read_csv("./model_files/new_species_protein_embeddings.csv").set_index("species").to_dict()["path"]
+    extra_species = pd.read_csv(os.path.join(model_files_path, "new_species_protein_embeddings.csv")).set_index("species").to_dict()["path"]
     embeddings_paths.update(extra_species) # adds new species
     
     
